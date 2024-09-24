@@ -7,10 +7,20 @@ const {
   InlineKeyboard,
 } = require("grammy");
 
+const mysql = require("mysql2");
+
 const { hydrate } = require("@grammyjs/hydrate");
 
 const bot = new Bot(process.env.BOT_API_KEY);
 bot.use(hydrate());
+
+// Настраиваем коннект к ДБ
+const pool = mysql.createPool({
+  host: "127.0.0.1",
+  user: "root",
+  password: process.env.MYSQL_PASSWORD,
+  database: "notes_app",
+});
 
 // Добавляем комманды в менюшку
 bot.api.setMyCommands([
@@ -26,12 +36,30 @@ bot.api.setMyCommands([
     command: "send",
     description: "aaa",
   },
+  {
+    command: "check",
+    description: "dbchech",
+  },
 ]);
 
 // Слушатели
 bot.command("start", async (ctx) => {
   await ctx.reply("Ого ого");
   console.log(ctx.msg);
+});
+
+// bot.command("check", async (ctx) => {
+//   pool.query("SELECT * FROM notes", (err, res) => {
+//     replyMsg = res.toString;
+//     return res;
+//   });
+//   await ctx.reply(replyMsg);
+// });
+
+bot.command("check", async (ctx) => {
+  pool.query("SELECT * FROM notes", (err, res) => {
+    ctx.reply(res);
+  });
 });
 
 bot.command("send", async (ctx) => {
